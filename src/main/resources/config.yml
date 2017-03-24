@@ -1,0 +1,14 @@
+showDebug: false
+dependencies:
+  kotlin-stdlib:
+    version: 1.1.1
+    groupId: org.jetbrains.kotlin
+    artifactId: kotlin-stdlib
+  kotlin-runtime:
+    version: 1.1.1
+    groupId: org.jetbrains.kotlin
+    artifactId: kotlin-runtime
+  kotlin-reflect:
+    version: 1.1.1
+    groupId: org.jetbrains.kotlin
+    artifactId: kotlin-reflect

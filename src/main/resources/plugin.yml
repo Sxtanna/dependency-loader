@@ -1,0 +1,5 @@
+name: DLoader
+version: 1.0
+main: com.sxtanna.DLoader
+author: Sxtanna
+load: STARTUP
