@@ -25,7 +25,7 @@ public final class ExampleDepend extends JavaPlugin {
 
 	@Override
 	public void onEnable() {
-		// "Normal Usage"
+		// "Normal Usage", at this point the Dependency will be loaded and available
 		new Database();
 
 		// Or Plugins could use this sort of logic in the onEnable alone, the instance of Database will be created after the dependency is loaded

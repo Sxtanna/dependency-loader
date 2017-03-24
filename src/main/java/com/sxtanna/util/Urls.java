@@ -1,12 +1,18 @@
 package com.sxtanna.util;
 
+import com.google.common.hash.Hashing;
+import com.google.common.io.Files;
 import com.sxtanna.DLoader;
 import com.sxtanna.base.Dependency;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
-import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.logging.Level;
 
@@ -20,9 +26,13 @@ import java.util.logging.Level;
 public final class Urls {
 
 	/**
-	 * Maven Central URL
+	 * Main Repository and Fallback URLs
 	 */
-	public static final String MAVEN_CENTRAL = "https://repo1.maven.org/maven2/";
+	public static final List<String> REPOSITORIES = new ArrayList<>();
+
+	static {
+		REPOSITORIES.add("https://repo1.maven.org/maven2/");
+	}
 
 
 	/**
@@ -39,9 +49,7 @@ public final class Urls {
 	 * @return The URL as a String
 	 */
 	public static String getBaseUrl(Dependency dependency) {
-		return MAVEN_CENTRAL +
-				dependency.getGroupId().replace('.', '/') + '/' +
-				dependency.getArtifactId() + '/' + dependency.getVersion() + '/';
+		return dependency.getGroupId().replace('.', '/') + '/' + dependency.getArtifactId() + '/' + dependency.getVersion() + '/';
 	}
 
 	/**
@@ -64,23 +72,32 @@ public final class Urls {
 		return getBaseUrl(dependency) + dependency.getPomName();
 	}
 
+	/**
+	 * Gets the URL pointing to this Dependency's snapshot metadata file in the repo
+	 *
+	 * @param dependency The Dependency
+	 * @return The URL pointing to its Snapshot metadata
+	 */
+	public static String getMetaUrl(Dependency dependency) {
+		return getBaseUrl(dependency) + "maven-metadata.xml";
+	}
+
 
 	/**
-	 *
 	 * Attempt to download a Dependency from Central
-	 *
 	 * <p>This will attempt to download its Jar and POM File</p>
 	 *
 	 * @param dependency The Dependency to be downloaded
-	 * @param folder The Folder where the files will be saved
-	 * @param whenDone Operation to be ran when they are downloaded, first File is the Jar, second is the POM
+	 * @param folder     The Folder where the files will be saved
+	 * @param whenDone   Operation to be ran when they are downloaded, first File is the Jar, second is the POM
 	 */
 	@SuppressWarnings("ResultOfMethodCallIgnored")
 	public static void download(Dependency dependency, File folder, BiConsumer<File, File> whenDone) {
-		final File jarFile = new File(folder, dependency.getJarName());
-		final File pomFile = new File(folder, dependency.getPomName());
+		final File jarFile = new File(folder, dependency.getJarName()), pomFile = new File(folder, dependency.getPomName());
 
-		if (jarFile.exists()) {
+		boolean alwaysUpdate = dependency.getOptions().isAlwaysUpdate(), isSnapShot = dependency.getVersion().endsWith("-SNAPSHOT");
+
+		if (jarFile.exists() && !isSnapShot && !alwaysUpdate) {
 			whenDone.accept(jarFile, pomFile);
 			return;
 		}
@@ -88,36 +105,112 @@ public final class Urls {
 		if (!folder.exists()) folder.mkdirs();
 
 		try {
-			URL pomUrl = new URL(getPomUrl(dependency));
-			URL jarUrl = new URL(getJarUrl(dependency));
 
-			pullFromUrlToFile(pomUrl, pomFile);
-			pullFromUrlToFile(jarUrl, jarFile);
+			final String pomUrl, jarUrl;
+			final String customRepo = dependency.getOptions().getCustomRepository();
+
+			if (isSnapShot) {
+				final File metaFile = new File(folder, "meta.xml");
+				tryDownload(getMetaUrl(dependency), metaFile, customRepo);
+
+				final String latestSnapShot = Xmls.readLatestSnapshot(dependency, metaFile);
+				final String latestFileName = dependency.getArtifactId() + "-" + latestSnapShot;
+
+				final File latestFile = new File(folder, latestFileName);
+				if (latestFile.exists() && !alwaysUpdate) {
+					whenDone.accept(jarFile, pomFile);
+					return;
+				} else {
+					if (pomFile.exists()) FileUtils.forceDelete(pomFile);
+					if (jarFile.exists()) FileUtils.forceDelete(jarFile);
+				}
+
+				pomUrl = getBaseUrl(dependency) + latestFileName + ".pom";
+				jarUrl = getBaseUrl(dependency) + latestFileName + ".jar";
+
+				latestFile.createNewFile();
+			} else {
+				pomUrl = getPomUrl(dependency);
+				jarUrl = getJarUrl(dependency);
+			}
+
+			tryDownload(pomUrl, pomFile, customRepo);
+			tryDownload(jarUrl, jarFile, customRepo);
 
 			whenDone.accept(jarFile, pomFile);
 		} catch (Exception e) {
-			DLoader.log(Level.SEVERE, "Failed to download dependency " + dependency.getName());
 			e.printStackTrace();
+			DLoader.log(Level.SEVERE, "Failed to download dependency " + dependency.getName());
 		}
 	}
 
 
+	private static void tryDownload(String fileUrl, File file, String... customUrl) throws Exception {
+		DLoader.debug("Attempting to download " + fileUrl);
+
+		if (customUrl.length > 0 && !customUrl[0].isEmpty()) {
+			openStream(customUrl[0] + fileUrl, (url, stream) -> pullFromStreamToFile(stream, url, file));
+			return;
+		}
+
+		for (String url : REPOSITORIES) {
+			try {
+				openStream(url + fileUrl, (fUrl, stream) -> pullFromStreamToFile(stream, fUrl, file));
+				return;
+			} catch (IOException e) {
+				DLoader.log(Level.WARNING, "Failed to download from repo '" + url + "'");
+			}
+		}
+
+		DLoader.log(Level.SEVERE, "Failed to download " + fileUrl);
+	}
+
+	private static void openStream(String url, BiConsumer<String, InputStream> block) throws IOException {
+		try (InputStream stream = new URL(url).openStream()) {
+			block.accept(url, stream);
+		}
+	}
+
 	/**
 	 * <b>VERY IMPORTANT METHOD</b>
-	 *
+	 * <p>
 	 * <p>This is basically the core of this entire damn thing, believe it or not..</p>
-	 * <p>This will download the file this URL points to</p>
+	 * <p>This will download the file this stream points to</p>
+	 * <p>After downloading this will also validate the file with its SHA-1 hash</p>
 	 *
-	 * @param url The URL pointing to a file
-	 * @param file The local file it will be saved to
+	 * @param stream The URL pointing to the root of the Repository
+	 * @param url    The Url extension pointing to the File
+	 * @param file   The local file it will be saved to
 	 */
-	private static void pullFromUrlToFile(URL url, File file) {
-		try(InputStream stream = url.openStream()) {
-			Files.copy(stream, file.toPath());
-		}
-		catch (Exception e) {
-			DLoader.log(Level.SEVERE, "Failed to download url " + url.getFile() + " to file " + file.getName());
+	private static void pullFromStreamToFile(InputStream stream, String url, File file) {
+		try {
+			FileUtils.copyInputStreamToFile(stream, file);
+
+			if (!file.getName().endsWith(".jar") || !DLoader.isEnforcingFileCheck()) return;
+
+			openStream(url + ".sha1", (shaUrl, shaStream) -> {
+
+				try {
+					final String mavenSha1 = IOUtils.toString(shaStream);
+					final String fileSha1  = Files.hash(file, Hashing.sha1()).toString();
+
+					DLoader.debug("Maven SHA-1: " + mavenSha1, "File SHA-1: " + fileSha1);
+
+					if (!mavenSha1.equals(fileSha1)) {
+						FileUtils.forceDelete(file);
+						throw new IllegalStateException("Failed to validate downloaded file " + file.getName());
+					}
+
+					DLoader.debug("File " + file.getName() + " passed validation");
+
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			});
+
+		} catch (IOException e) {
 			e.printStackTrace();
+			DLoader.log(Level.SEVERE, "Failed to download url to file " + file.getName());
 		}
 	}
 

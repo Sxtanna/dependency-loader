@@ -4,27 +4,36 @@ import com.google.common.base.Objects;
 
 /**
  * The Core component of this Util
- *
+ * <p>
  * <p>Holds details of the Maven Dependency</p>
  */
 public final class Dependency {
 
 	private final String name, version, groupId, artifactId;
-
+	private final DOptions options;
 
 	/**
 	 * Create a new Dependency
 	 *
-	 * @param name The name of the Dependency, can be anything, but recommended to be something global
-	 * @param version The version of this Maven Artifact
-	 * @param groupId The groupId of this Maven Artifact
+	 * @param name       The name of the Dependency, can be anything, but recommended to be something global
+	 * @param version    The version of this Maven Artifact
+	 * @param groupId    The groupId of this Maven Artifact
 	 * @param artifactId The artifactId of this Maven Artifact
+	 * @param customRepo The custom repository to load this from
 	 */
-	public Dependency(String name, String version, String groupId, String artifactId) {
+	public Dependency(String name, String version, String groupId, String artifactId, String customRepo, boolean alwaysUpdate) {
 		this.name = name;
 		this.version = version;
 		this.groupId = groupId;
 		this.artifactId = artifactId;
+		this.options = new DOptions(customRepo, alwaysUpdate);
+	}
+
+	/**
+	 * @see #Dependency(String, String, String, String, String, boolean)
+	 */
+	public Dependency(String name, String version, String groupId, String artifactId) {
+		this(name, version, groupId, artifactId, "", false);
 	}
 
 
@@ -64,6 +73,14 @@ public final class Dependency {
 		return artifactId;
 	}
 
+	/**
+	 * This Dependency's options
+	 *
+	 * @return The Options
+	 */
+	public DOptions getOptions() {
+		return options;
+	}
 
 	/**
 	 * The name of this Dependency's Jar file in the Repo

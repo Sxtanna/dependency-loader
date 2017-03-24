@@ -1,14 +1,56 @@
-showDebug: false
+#=============================================================================
+# <
+# <                          Options
+# <
+# <  "showDebug" -> Set to true if you want Debug Messages
+# <  "enforceFileCheck" -> This will validate the downloaded files
+# <  "repositories" -> Fallback repositories in case central can't be reached
+# <
+#=============================================================================
+options:
+  showDebug: false
+  enforceFileCheck: true
+  repositories:
+# =============================================
+#       This is how they should be added,
+#            in list format.
+#
+#    - "https://repo1.maven.org/maven2/"
+#    - "https://repo1.maven.org/maven2/"
+# =============================================
+
+
 dependencies:
-  kotlin-stdlib:
-    version: 1.1.1
-    groupId: org.jetbrains.kotlin
-    artifactId: kotlin-stdlib
-  kotlin-runtime:
-    version: 1.1.1
-    groupId: org.jetbrains.kotlin
-    artifactId: kotlin-runtime
-  kotlin-reflect:
-    version: 1.1.1
-    groupId: org.jetbrains.kotlin
-    artifactId: kotlin-reflect
+# =======================================
+#      Below are examples of adding
+#    dependencies that will be loaded
+#       when the server starts up.
+#    (All fields should be lowercase)
+#  ------------------------------------
+#
+#            Required Fields
+#
+#    - group -> The maven groupId
+#    - version -> The maven version, SNAPSHOTS also work
+#    - artifact -> The maven artifactId
+#
+#            Optional Fields
+#
+#    - repository -> Specify the repository to look for this Dependency
+#    - always-update -> Force update the File even if its already downloaded. (default false) {not implemented}
+#
+#  kotlin-stdlib:
+#    version: 1.1.1
+#    group: org.jetbrains.kotlin
+#    artifact: kotlin-stdlib
+#  kotlin-runtime:
+#    version: 1.1.1
+#    group: org.jetbrains.kotlin
+#    artifact: kotlin-runtime
+#    always-update: true
+#  kotlin-eap:
+#    version: 1.1.1-eap-26
+#    group: org.jetbrains.kotlin
+#    artifact: kotlin-stdlib-jre8
+#    repository: https://dl.bintray.com/kotlin/kotlin-eap-1.1/
+# =======================================

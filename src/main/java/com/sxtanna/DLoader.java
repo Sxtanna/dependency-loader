@@ -12,10 +12,7 @@ import java.io.File;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -33,7 +30,7 @@ public final class DLoader extends JavaPlugin {
 	private static Method method;
 	private static URLClassLoader classLoader = ((URLClassLoader) ClassLoader.getSystemClassLoader());
 
-	private static boolean working = true, debug = false;
+	private static boolean working = true, showDebug = false, enforceFileCheck = false;
 
 	static {
 		try {
@@ -64,34 +61,47 @@ public final class DLoader extends JavaPlugin {
 		saveDefaultConfig();
 
 		FileConfiguration config = getConfig();
-		debug = config.getBoolean("showDebug", false);
-		ConfigurationSection configDependencies = config.getConfigurationSection("dependencies");
+		showDebug = config.getBoolean("options.showDebug", false);
+		enforceFileCheck = config.getBoolean("options.showDebug", false);
 
-		Set<String> keys = configDependencies.getKeys(false);
+		Urls.REPOSITORIES.addAll(config.getStringList("options.repositories"));
+
+		ConfigurationSection configDependencies = config.getConfigurationSection("dependencies");
+		Set<String> keys = configDependencies == null ? Collections.emptySet() : configDependencies.getKeys(false);
 
 		log(Level.INFO,
-				"=====================================",
+				" ", " ",
+				"=============================================",
 				"<  ",
 				"< Dependency Loader " + getDescription().getVersion() + " by - " + getDescription().getAuthors(),
 				"<  ",
-				"< Showing Debug Messages? -> " + debug,
+				"< Showing Debug Messages? -> " + showDebug,
 				"< Dependencies In Config -> " + keys.size(),
 				"<  ",
-				"=====================================");
+				"=============================================",
+				" ", " ");
 
 		keys.forEach(name -> {
 
+			String groupId    = configDependencies.getString(name + ".group", "");
 			String version    = configDependencies.getString(name + ".version", "");
-			String groupId    = configDependencies.getString(name + ".groupId", "");
-			String artifactId = configDependencies.getString(name + ".artifactId", "");
+			String artifactId = configDependencies.getString(name + ".artifact", "");
+			String customRepo = configDependencies.getString(name + ".repository");
+			boolean alwaysUpdate = configDependencies.getBoolean(name + ".always-update", false);
 
 			if (version.isEmpty() || groupId.isEmpty() || artifactId.isEmpty()) {
 				log(Level.SEVERE,
-						"Dependency " + name + " has incomplete details",
-						"Requires, case-sensitive",
-						"'version', 'groupId', 'artifactId'");
+						" ", " ",
+						"=============================================",
+						"< ",
+						"< Dependency " + name + " has incomplete details",
+						"< Requires, case-sensitive",
+						"< 'version', 'group', 'artifact'",
+						"< ",
+						"=============================================",
+						" ", " ");
 			} else {
-				final Dependency dependency = new Dependency(name.toLowerCase(), version, groupId, artifactId);
+				final Dependency dependency = new Dependency(name.toLowerCase(), version, groupId, artifactId, customRepo, alwaysUpdate);
 				if (dependencies.containsValue(dependency)) debug("Dependency " + name + " has a duplicate");
 
 				dependencies.put(name, dependency);
@@ -112,6 +122,14 @@ public final class DLoader extends JavaPlugin {
 		return instance;
 	}
 
+
+	public static boolean isShowingDebug() {
+		return showDebug;
+	}
+
+	public static boolean isEnforcingFileCheck() {
+		return enforceFileCheck;
+	}
 
 	/**
 	 * Load a {@link Dependency} onto the Classpath
@@ -182,7 +200,7 @@ public final class DLoader extends JavaPlugin {
 
 
 	public static void debug(String... message) {
-		if (debug) log(Level.WARNING, message);
+		if (isShowingDebug()) log(Level.WARNING, message);
 	}
 
 	public static void log(Level level, String... message) {
