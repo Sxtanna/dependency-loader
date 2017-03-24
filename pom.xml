@@ -10,6 +10,27 @@
 
     <name>${project.artifactId}</name>
     <description>Simple Maven Dependency Downloader for Spigot Plugins</description>
+    <url>https://github.com/Sxtanna/dependency-loader</url>
+
+    <organization>
+        <name>Sxtanna Github</name>
+        <url>https://github.com/Sxtanna</url>
+    </organization>
+
+    <developers>
+        <developer>
+            <name>Ranald Taylor</name>
+            <email>ranald.taylor@gmail.com</email>
+        </developer>
+    </developers>
+
+    <licenses>
+        <license>
+            <name>The Apache Software License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
 
     <properties>
         <maven.compiler.source>1.8</maven.compiler.source>

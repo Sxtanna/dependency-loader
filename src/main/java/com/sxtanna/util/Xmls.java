@@ -83,9 +83,7 @@ public final class Xmls {
 				final String optional = readTag(dependency, TAG_OPTIONAL);
 				if (!optional.isEmpty() && optional.equalsIgnoreCase("true")) continue;
 
-				DLoader.debug("Version " + version);
-				DLoader.debug("GroupId " + groupId);
-				DLoader.debug("ArtifactId " + artifactId);
+				DLoader.debug("Version " + version, "GroupId " + groupId, "ArtifactId " + artifactId);
 
 				dependencies.add(new Dependency(groupId + ':' + artifactId + ':' + version, version, groupId, artifactId));
 			}
