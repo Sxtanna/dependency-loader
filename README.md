@@ -1,4 +1,4 @@
-# DependencyLoader [![Apache 2.0 License](https://img.shields.io/badge/license-Apache%202.0-blue.svg?style=flat-square)](https://www.apache.org/licenses/LICENSE-2.0) [![GitHub release](https://img.shields.io/github/release/Sxtanna/dependency-loader.svg?style=flat-square)]()
+# DependencyLoader [![Apache 2.0 License](https://img.shields.io/badge/license-Apache%202.0-blue.svg?style=flat-square)](https://www.apache.org/licenses/LICENSE-2.0) [![Current Release](https://img.shields.io/github/release/Sxtanna/dependency-loader.svg?style=flat-square)](https://github.com/Sxtanna/dependency-loader/releases/tag/1.0) [![Commits since release](https://img.shields.io/github/commits-since/Sxtanna/dependency-loader/1.0.svg?style=flat-square)](https://github.com/Sxtanna/dependency-loader/commits/master)
 Simple Maven Dependency Downloader for Spigot Plugins
 
 ### Dependency Loading
@@ -8,11 +8,18 @@ Simple Maven Dependency Downloader for Spigot Plugins
 ## In Config  
 ```yml
 dependencies:
-  kotlin-stdlib:
+  kotlin-runtime:
     version: 1.1.1
-    groupId: org.jetbrains.kotlin
-    artifactId: kotlin-stdlib
+    group: org.jetbrains.kotlin
+    artifact: kotlin-runtime
+    always-update: true
+  kotlin-eap:
+    version: 1.1.1-eap-26
+    group: org.jetbrains.kotlin
+    artifact: kotlin-stdlib-jre8
+    repository: https://dl.bintray.com/kotlin/kotlin-eap-1.1/
 ```
+*Tags, 'always-update' and 'repository' are optional and explained in the default config*
 
 ## By a Plugin
 ```java
