@@ -1,4 +1,4 @@
-# DependencyLoader [![Apache 2.0 License](https://img.shields.io/badge/license-Apache%202.0-blue.svg?style=flat-square)](https://www.apache.org/licenses/LICENSE-2.0) [![Current Release](https://img.shields.io/github/release/Sxtanna/dependency-loader.svg?style=flat-square)](https://github.com/Sxtanna/dependency-loader/releases/latest) [![Commits since release](https://img.shields.io/github/commits-since/Sxtanna/dependency-loader/1.1.svg?style=flat-square)](https://github.com/Sxtanna/dependency-loader/commits/master)
+# DependencyLoader [![Apache 2.0 License](https://img.shields.io/badge/license-Apache%202.0-blue.svg?style=flat-square)](https://www.apache.org/licenses/LICENSE-2.0) [![Current Release](https://img.shields.io/github/release/Sxtanna/dependency-loader.svg?style=flat-square)](https://github.com/Sxtanna/dependency-loader/releases/latest) [![Commits since release](https://img.shields.io/github/commits-since/Sxtanna/dependency-loader/v1.1.svg?style=flat-square)](https://github.com/Sxtanna/dependency-loader/commits/master)
 Simple Maven Dependency Downloader for Spigot Plugins
 
 ## How to get it!
