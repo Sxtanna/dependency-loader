@@ -3,7 +3,10 @@ Simple Maven Dependency Downloader for Spigot Plugins
 
 ## How to get it!
 
-### Maven
+### Developers
+
+Maven
+
 ```xml
 <dependency>
     <groupId>com.sxtanna</groupId>
@@ -12,8 +15,14 @@ Simple Maven Dependency Downloader for Spigot Plugins
 </dependency>
 ```
 
+### Server Owners
 
-### Dependency Loading
+Spigot Resource
+
+<a href="https://www.spigotmc.org/resources/dependency-loader.38523/"><img src="https://cloud.githubusercontent.com/assets/20979389/24360216/adbdb4c4-12d4-11e7-81f7-dc4d2e8958ec.png" alt="Spigot Resource" width="120" height="120"></a>
+*Click me*
+
+## Dependency Loading
   * Specifically Entered in the Config
   * Loaded at runtime by other plugins
   
