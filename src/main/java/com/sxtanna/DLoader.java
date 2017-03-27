@@ -67,6 +67,7 @@ public final class DLoader extends JavaPlugin {
 		enforceFileCheck = config.getBoolean("options.showDebug", true);
 
 		Urls.REPOSITORIES.addAll(config.getStringList("options.repositories"));
+		Urls.REPOSITORIES.replaceAll(url -> url.endsWith("/") ? url : url + '/');
 
 		ConfigurationSection configDependencies = config.getConfigurationSection("dependencies");
 		Set<String>          keys               = configDependencies == null ? Collections.emptySet() : configDependencies.getKeys(false);

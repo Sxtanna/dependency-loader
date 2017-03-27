@@ -154,8 +154,10 @@ public final class Urls {
 		}
 
 		for (String url : REPOSITORIES) {
+			final String actualUrl = url + fileUrl;
+			DLoader.debug("URL is '" + actualUrl + "'");
 			try {
-				openStream(url + fileUrl, (fUrl, stream) -> pullFromStreamToFile(stream, fUrl, file));
+				openStream(actualUrl, (fUrl, stream) -> pullFromStreamToFile(stream, fUrl, file));
 				return;
 			} catch (IOException e) {
 				DLoader.log(Level.WARNING, "Failed to download from repo '" + url + "'");
