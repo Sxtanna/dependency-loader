@@ -1,11 +1,24 @@
 # DependencyLoader [![Apache 2.0 License](https://img.shields.io/badge/license-Apache%202.0-blue.svg?style=flat-square)](https://www.apache.org/licenses/LICENSE-2.0) [![Current Release](https://img.shields.io/github/release/Sxtanna/dependency-loader.svg?style=flat-square)](https://github.com/Sxtanna/dependency-loader/releases/tag/1.0) [![Commits since release](https://img.shields.io/github/commits-since/Sxtanna/dependency-loader/1.0.svg?style=flat-square)](https://github.com/Sxtanna/dependency-loader/commits/master)
 Simple Maven Dependency Downloader for Spigot Plugins
 
+## How to get it!
+
+#####*Soon available through maven!!*
+```xml
+<dependency>
+    <groupId>com.sxtanna</groupId>
+    <artifactId>DependencyLoader</artifactId>
+    <version>1.1</version>
+</dependency>
+```
+*Disclaimer, doesn't currently work, this will be removed when it does*
+
+
 ### Dependency Loading
   * Specifically Entered in the Config
   * Loaded at runtime by other plugins
   
-## In Config  
+#### In Config  
 ```yml
 dependencies:
   kotlin-runtime:
@@ -21,7 +34,7 @@ dependencies:
 ```
 *Tags, 'always-update' and 'repository' are optional and explained in the default config*
 
-## By a Plugin
+#### By a Plugin
 ```java
 public final class ExampleDepend extends JavaPlugin {
 
