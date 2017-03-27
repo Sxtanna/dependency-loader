@@ -3,6 +3,7 @@ package com.sxtanna.util;
 import com.sxtanna.DLoader;
 import com.sxtanna.base.Dependency;
 import org.apache.commons.io.FileUtils;
+import org.jetbrains.annotations.NotNull;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -33,7 +34,10 @@ public final class Xmls {
 			TAG_VERSION    = "version",
 			TAG_OPTIONAL   = "optional",
 			TAG_ARTIFACT   = "artifactId",
-			TAG_DEPENDENCY = "dependency";
+			TAG_DEPENDENCY = "dependency",
+
+			SCOPE_ONE = "provided",
+			SCOPE_TWO = "runtime";
 
 	private static DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 
@@ -50,7 +54,7 @@ public final class Xmls {
 	 * @param pomFile The POM file
 	 * @return The List of Dependencies or an Empty list if none
 	 */
-	public static List<Dependency> readDependencies(File pomFile) {
+	public static @NotNull List<Dependency> readDependencies(@NotNull File pomFile) {
 		final List<Dependency> dependencies = new ArrayList<>();
 
 		try {
@@ -68,7 +72,7 @@ public final class Xmls {
 				final String artifactId = readTag(dependency, TAG_ARTIFACT);
 				final String scope      = readTag(dependency, TAG_SCOPE);
 
-				if (!scope.equals("provided") && !scope.isEmpty()) {
+				if (!scope.equals(SCOPE_ONE) && !scope.equals(SCOPE_TWO)) {
 					DLoader.debug("Skipping " + groupId + ":" + artifactId + ", its scope is '" + scope + "'");
 					continue;
 				}
@@ -107,7 +111,7 @@ public final class Xmls {
 	 * @return The version with "SNAPSHOT" replaced with the latest
 	 */
 	@SuppressWarnings("WeakerAccess")
-	public static String readLatestSnapshot(Dependency dependency, File metaFile) {
+	public static @NotNull String readLatestSnapshot(@NotNull Dependency dependency, @NotNull File metaFile) {
 		try {
 			final Element document = readDocument(metaFile);
 
@@ -132,7 +136,7 @@ public final class Xmls {
 	}
 
 
-	private static Element readDocument(File file) throws ParserConfigurationException, IOException, SAXException {
+	private static @NotNull Element readDocument(@NotNull File file) throws ParserConfigurationException, IOException, SAXException {
 		final DocumentBuilder builder  = factory.newDocumentBuilder();
 		final Document        document = builder.parse(file);
 
@@ -141,7 +145,7 @@ public final class Xmls {
 		return document.getDocumentElement();
 	}
 
-	private static String readTag(Element element, String tagName) {
+	private static String readTag(@NotNull Element element, @NotNull String tagName) {
 		Node item = element.getElementsByTagName(tagName).item(0);
 		if (item == null) return "";
 

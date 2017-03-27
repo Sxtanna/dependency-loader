@@ -1,6 +1,8 @@
 package com.sxtanna.base;
 
 import com.google.common.base.Objects;
+import com.sxtanna.util.Urls;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * The Core component of this Util
@@ -10,7 +12,9 @@ import com.google.common.base.Objects;
 @SuppressWarnings("WeakerAccess")
 public final class Dependency {
 
+	@NotNull
 	private final String name, version, groupId, artifactId;
+	@NotNull
 	private final DOptions options;
 
 	private Dependency parent = null;
@@ -24,12 +28,12 @@ public final class Dependency {
 	 * @param artifactId The artifactId of this Maven Artifact
 	 * @param customRepo The custom repository to load this from
 	 */
-	public Dependency(String name, String version, String groupId, String artifactId, String customRepo, boolean alwaysUpdate) {
+	public Dependency(@NotNull String name, @NotNull String version, @NotNull String groupId, @NotNull String artifactId, String customRepo, boolean alwaysUpdate) {
 		this.name = name;
 		this.version = version;
 		this.groupId = groupId;
 		this.artifactId = artifactId;
-		this.options = new DOptions(customRepo, alwaysUpdate);
+		this.options = new DOptions(Urls.fixUrl(customRepo), alwaysUpdate);
 	}
 
 	/**
@@ -45,6 +49,7 @@ public final class Dependency {
 	 *
 	 * @return The name
 	 */
+	@NotNull
 	public String getName() {
 		return name;
 	}
@@ -54,6 +59,7 @@ public final class Dependency {
 	 *
 	 * @return The version
 	 */
+	@NotNull
 	public String getVersion() {
 		return version;
 	}
@@ -63,6 +69,7 @@ public final class Dependency {
 	 *
 	 * @return The groupId
 	 */
+	@NotNull
 	public String getGroupId() {
 		return groupId;
 	}
@@ -72,6 +79,7 @@ public final class Dependency {
 	 *
 	 * @return The artifactId
 	 */
+	@NotNull
 	public String getArtifactId() {
 		return artifactId;
 	}
@@ -81,6 +89,7 @@ public final class Dependency {
 	 *
 	 * @return The Options
 	 */
+	@NotNull
 	public DOptions getOptions() {
 		return options;
 	}
@@ -114,9 +123,9 @@ public final class Dependency {
 
 	/**
 	 * Get the depth of this dependency
-	 *
+	 * <p>
 	 * <p>Where "this" is this dependency, and "Parent" is it's parent</p>
-	 *
+	 * <p>
 	 * <p>this, will return 0</p>
 	 * <p>Parent > this, will return 1</p>
 	 * <p>Parent > Parent > this, will return 2</p>
@@ -134,7 +143,6 @@ public final class Dependency {
 
 		return depth;
 	}
-
 
 
 	/**

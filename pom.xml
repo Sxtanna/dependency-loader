@@ -5,7 +5,7 @@
 
     <groupId>com.sxtanna</groupId>
     <artifactId>DependencyLoader</artifactId>
-    <version>1.1</version>
+    <version>1.1.2</version>
     <packaging>jar</packaging>
 
     <name>${project.artifactId}</name>
@@ -58,6 +58,12 @@
             <artifactId>spigot</artifactId>
             <version>${versionSpigot}</version>
             <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.jetbrains</groupId>
+            <artifactId>annotations</artifactId>
+            <version>LATEST</version>
         </dependency>
 
         <!--Kotlin Example Dependencies-->

@@ -6,15 +6,18 @@ import com.sxtanna.DLoader;
 import com.sxtanna.base.Dependency;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.logging.Level;
+import java.util.stream.Collectors;
 
 /**
  * URL Utility class, to make my life easier
@@ -28,10 +31,19 @@ public final class Urls {
 	/**
 	 * Main Repository and Fallback URLs
 	 */
-	public static final List<String> REPOSITORIES = new ArrayList<>();
+	private static final List<String> REPOSITORIES = new ArrayList<>();
 
 	static {
 		REPOSITORIES.add("https://repo1.maven.org/maven2/");
+	}
+
+
+	public static void addRepositories(@NotNull List<String> repositories) {
+		REPOSITORIES.addAll(repositories.stream().map(Urls::fixUrl).collect(Collectors.toList()));
+	}
+
+	public static void addRepositories(@NotNull String... repositories) {
+		addRepositories(Arrays.asList(repositories));
 	}
 
 
@@ -48,7 +60,8 @@ public final class Urls {
 	 * @param dependency The Dependency
 	 * @return The URL as a String
 	 */
-	public static String getBaseUrl(Dependency dependency) {
+	@NotNull
+	public static String getBaseUrl(@NotNull Dependency dependency) {
 		return dependency.getGroupId().replace('.', '/') + '/' + dependency.getArtifactId() + '/' + dependency.getVersion() + '/';
 	}
 
@@ -58,7 +71,8 @@ public final class Urls {
 	 * @param dependency The Dependency
 	 * @return The URL pointing to its Jar
 	 */
-	public static String getJarUrl(Dependency dependency) {
+	@NotNull
+	public static String getJarUrl(@NotNull Dependency dependency) {
 		return getBaseUrl(dependency) + dependency.getJarName();
 	}
 
@@ -68,7 +82,8 @@ public final class Urls {
 	 * @param dependency The Dependency
 	 * @return The URL pointing to its POM
 	 */
-	public static String getPomUrl(Dependency dependency) {
+	@NotNull
+	public static String getPomUrl(@NotNull Dependency dependency) {
 		return getBaseUrl(dependency) + dependency.getPomName();
 	}
 
@@ -78,8 +93,20 @@ public final class Urls {
 	 * @param dependency The Dependency
 	 * @return The URL pointing to its Snapshot metadata
 	 */
-	public static String getMetaUrl(Dependency dependency) {
+	@NotNull
+	public static String getMetaUrl(@NotNull Dependency dependency) {
 		return getBaseUrl(dependency) + "maven-metadata.xml";
+	}
+
+	/**
+	 * Will fix a URL if it doesn't end with a '/'
+	 *
+	 * @param original The original URL
+	 * @return The fixed URL if it didn't end with '/'
+	 */
+	@NotNull
+	public static String fixUrl(@NotNull String original) {
+		return original.endsWith("/") ? original : original + '/';
 	}
 
 
@@ -92,7 +119,7 @@ public final class Urls {
 	 * @param whenDone   Operation to be ran when they are downloaded, first File is the Jar, second is the POM
 	 */
 	@SuppressWarnings("ResultOfMethodCallIgnored")
-	public static void download(Dependency dependency, File folder, BiConsumer<File, File> whenDone) {
+	public static void download(@NotNull Dependency dependency, @NotNull File folder, @NotNull BiConsumer<File, File> whenDone) {
 		final File jarFile = new File(folder, dependency.getJarName()), pomFile = new File(folder, dependency.getPomName());
 
 		boolean alwaysUpdate = dependency.getOptions().isAlwaysUpdate(), isSnapShot = dependency.getVersion().endsWith("-SNAPSHOT");
@@ -145,7 +172,7 @@ public final class Urls {
 	}
 
 
-	private static void tryDownload(String fileUrl, File file, String... customUrl) throws Exception {
+	private static void tryDownload(@NotNull String fileUrl, @NotNull File file, @NotNull String... customUrl) throws Exception {
 		DLoader.debug("Attempting to download " + fileUrl);
 
 		if (customUrl.length > 0 && !customUrl[0].isEmpty()) {
@@ -167,7 +194,7 @@ public final class Urls {
 		DLoader.log(Level.SEVERE, "Failed to download " + fileUrl);
 	}
 
-	private static void openStream(String url, BiConsumer<String, InputStream> block) throws IOException {
+	private static void openStream(@NotNull String url, @NotNull BiConsumer<String, InputStream> block) throws IOException {
 		try (InputStream stream = new URL(url).openStream()) {
 			block.accept(url, stream);
 		}
@@ -184,7 +211,7 @@ public final class Urls {
 	 * @param url    The Url extension pointing to the File
 	 * @param file   The local file it will be saved to
 	 */
-	private static void pullFromStreamToFile(InputStream stream, String url, File file) {
+	private static void pullFromStreamToFile(@NotNull InputStream stream, @NotNull String url, @NotNull File file) {
 		try {
 			FileUtils.copyInputStreamToFile(stream, file);
 

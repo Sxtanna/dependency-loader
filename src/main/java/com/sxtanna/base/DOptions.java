@@ -1,25 +1,29 @@
 package com.sxtanna.base;
 
 import com.google.common.base.Objects;
+import com.sxtanna.util.Urls;
+import org.jetbrains.annotations.NotNull;
 
 public final class DOptions {
 
-	private String customRepository;
+	@NotNull
+	private String  customRepository;
 	private boolean alwaysUpdate;
 
 
-	DOptions(String customRepository, boolean alwaysUpdate) {
+	DOptions(@NotNull String customRepository, boolean alwaysUpdate) {
 		this.customRepository = customRepository;
 		this.alwaysUpdate = alwaysUpdate;
 	}
 
 
+	@NotNull
 	public String getCustomRepository() {
-		return customRepository == null ? "" : customRepository;
+		return customRepository;
 	}
 
-	public void setCustomRepository(String customRepository) {
-		this.customRepository = customRepository;
+	public void setCustomRepository(@NotNull String customRepository) {
+		this.customRepository = Urls.fixUrl(customRepository);
 	}
 
 	public boolean isAlwaysUpdate() {

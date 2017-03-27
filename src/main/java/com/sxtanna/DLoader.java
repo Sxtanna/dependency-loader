@@ -9,12 +9,16 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -66,11 +70,7 @@ public final class DLoader extends JavaPlugin {
 		showDebug = config.getBoolean("options.showDebug", false);
 		enforceFileCheck = config.getBoolean("options.showDebug", true);
 
-		Urls.REPOSITORIES.addAll(config.getStringList("options.repositories"));
-		Urls.REPOSITORIES.replaceAll(url -> url.endsWith("/") ? url : url + '/');
-
-		ConfigurationSection configDependencies = config.getConfigurationSection("dependencies");
-		Set<String>          keys               = configDependencies == null ? Collections.emptySet() : configDependencies.getKeys(false);
+		Urls.addRepositories(config.getStringList("options.repositories"));
 
 		PluginDescriptionFile pluginDesc = getDescription();
 
@@ -82,19 +82,23 @@ public final class DLoader extends JavaPlugin {
 				"<  ",
 				"< Showing Debug Messages? -> " + showDebug,
 				"< Enforcing File Check? -> " + enforceFileCheck,
-				"< Dependencies In Config -> " + keys.size(),
 				"<  ",
 				blockBar(45),
 				" ", " ");
 
+		ConfigurationSection configDeps = config.getConfigurationSection("dependencies");
+		if (configDeps == null) return;
+
+
+		Set<String> keys = configDeps.getKeys(false);
 
 		keys.forEach(name -> {
 
-			String  groupId      = configDependencies.getString(name + ".group", "");
-			String  version      = configDependencies.getString(name + ".version", "");
-			String  artifactId   = configDependencies.getString(name + ".artifact", "");
-			String  customRepo   = configDependencies.getString(name + ".repository");
-			boolean alwaysUpdate = configDependencies.getBoolean(name + ".always-update", false);
+			String  groupId      = configDeps.getString(name + ".group", "");
+			String  version      = configDeps.getString(name + ".version", "");
+			String  artifactId   = configDeps.getString(name + ".artifact", "");
+			String  customRepo   = configDeps.getString(name + ".repository", "");
+			boolean alwaysUpdate = configDeps.getBoolean(name + ".always-update", false);
 
 			if (version.isEmpty() || groupId.isEmpty() || artifactId.isEmpty()) {
 				log(Level.SEVERE,
@@ -111,8 +115,8 @@ public final class DLoader extends JavaPlugin {
 				final Dependency dependency = new Dependency(name.toLowerCase(), version, groupId, artifactId, customRepo, alwaysUpdate);
 				if (dependencies.containsValue(dependency)) debug("Dependency " + name + " has a duplicate");
 
+				debug("Attempting load of Dependency " + name + " From Config");
 				load(dependency);
-				debug("Loaded Dependency " + name + " From Config");
 			}
 		});
 
@@ -124,6 +128,7 @@ public final class DLoader extends JavaPlugin {
 	 *
 	 * @return The Instance
 	 */
+	@NotNull
 	public static DLoader getInstance() {
 		return instance;
 	}
@@ -146,7 +151,7 @@ public final class DLoader extends JavaPlugin {
 	 * @param dependency The Dependency to be loaded
 	 * @see DLoader#load(Dependency, Runnable)
 	 */
-	public void load(Dependency dependency) {
+	public void load(@NotNull Dependency dependency) {
 		load(dependency, () -> {
 		});
 	}
@@ -160,11 +165,17 @@ public final class DLoader extends JavaPlugin {
 	 * @param whenDone   Block of code ran after everything is loaded
 	 * @see DLoader#load(Dependency)
 	 */
-	public void load(Dependency dependency, Runnable whenDone) {
+	public void load(@NotNull Dependency dependency, @NotNull Runnable whenDone) {
 		debug(" ", " ", blockBar(60), " ", blockArrow(dependency, "v"));
+
 		Urls.download(dependency, new File(dependencyFolder, dependency.getGroupId()), (jar, pom) -> {
-			loadJar(dependency, jar);
-			loadChildren(dependency, pom, whenDone);
+
+			if (!jar.exists() || !pom.exists())
+				debug("POM File Downloaded -> " + pom.exists(), "Jar File Downloaded -> " + jar.exists());
+			else {
+				loadJar(dependency, jar);
+				loadChildren(dependency, pom, whenDone);
+			}
 		});
 	}
 
@@ -174,7 +185,7 @@ public final class DLoader extends JavaPlugin {
 	 * @param name The name of the Dependency
 	 * @return An Optional containing either the Dependency, or null if not loaded
 	 */
-	public Optional<Dependency> get(String name) {
+	public Optional<Dependency> get(@NotNull String name) {
 		return Optional.ofNullable(dependencies.get(name.toLowerCase()));
 	}
 
