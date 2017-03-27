@@ -3,15 +3,14 @@ Simple Maven Dependency Downloader for Spigot Plugins
 
 ## How to get it!
 
-#####*Soon available through maven!!*
+###Maven
 ```xml
 <dependency>
     <groupId>com.sxtanna</groupId>
     <artifactId>DependencyLoader</artifactId>
-    <version>1.1</version>
+    <version>LATEST</version>
 </dependency>
 ```
-*Disclaimer, doesn't currently work, this will be removed when it does*
 
 
 ### Dependency Loading

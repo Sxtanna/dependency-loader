@@ -32,7 +32,7 @@ public final class DLoader extends JavaPlugin {
 	private static Method method;
 	private static URLClassLoader classLoader = ((URLClassLoader) ClassLoader.getSystemClassLoader());
 
-	private static boolean working = true, showDebug = false, enforceFileCheck = false;
+	private static boolean working = true, showDebug = false, enforceFileCheck = true;
 
 	static {
 		try {
@@ -64,7 +64,7 @@ public final class DLoader extends JavaPlugin {
 
 		FileConfiguration config = getConfig();
 		showDebug = config.getBoolean("options.showDebug", false);
-		enforceFileCheck = config.getBoolean("options.showDebug", false);
+		enforceFileCheck = config.getBoolean("options.showDebug", true);
 
 		Urls.REPOSITORIES.addAll(config.getStringList("options.repositories"));
 
