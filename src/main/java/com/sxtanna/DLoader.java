@@ -1,11 +1,13 @@
 package com.sxtanna;
 
+import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
 import com.sxtanna.base.Dependency;
 import com.sxtanna.util.Urls;
 import com.sxtanna.util.Xmls;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
@@ -18,7 +20,7 @@ import java.util.logging.Logger;
 
 /**
  * Dependency Loader Main Class
- *
+ * <p>
  * Handles loading Dependencies from the Config and other Plugins
  */
 @SuppressWarnings("WeakerAccess")
@@ -67,49 +69,52 @@ public final class DLoader extends JavaPlugin {
 		Urls.REPOSITORIES.addAll(config.getStringList("options.repositories"));
 
 		ConfigurationSection configDependencies = config.getConfigurationSection("dependencies");
-		Set<String> keys = configDependencies == null ? Collections.emptySet() : configDependencies.getKeys(false);
+		Set<String>          keys               = configDependencies == null ? Collections.emptySet() : configDependencies.getKeys(false);
+
+		PluginDescriptionFile pluginDesc = getDescription();
 
 		log(Level.INFO,
 				" ", " ",
-				"=============================================",
+				blockBar(45),
 				"<  ",
-				"< Dependency Loader " + getDescription().getVersion() + " by - " + getDescription().getAuthors(),
+				"< Dependency Loader " + pluginDesc.getVersion() + " by - " + pluginDesc.getAuthors(),
 				"<  ",
 				"< Showing Debug Messages? -> " + showDebug,
+				"< Enforcing File Check? -> " + enforceFileCheck,
 				"< Dependencies In Config -> " + keys.size(),
 				"<  ",
-				"=============================================",
+				blockBar(45),
 				" ", " ");
+
 
 		keys.forEach(name -> {
 
-			String groupId    = configDependencies.getString(name + ".group", "");
-			String version    = configDependencies.getString(name + ".version", "");
-			String artifactId = configDependencies.getString(name + ".artifact", "");
-			String customRepo = configDependencies.getString(name + ".repository");
+			String  groupId      = configDependencies.getString(name + ".group", "");
+			String  version      = configDependencies.getString(name + ".version", "");
+			String  artifactId   = configDependencies.getString(name + ".artifact", "");
+			String  customRepo   = configDependencies.getString(name + ".repository");
 			boolean alwaysUpdate = configDependencies.getBoolean(name + ".always-update", false);
 
 			if (version.isEmpty() || groupId.isEmpty() || artifactId.isEmpty()) {
 				log(Level.SEVERE,
 						" ", " ",
-						"=============================================",
+						blockBar(45),
 						"< ",
 						"< Dependency " + name + " has incomplete details",
 						"< Requires, case-sensitive",
 						"< 'version', 'group', 'artifact'",
 						"< ",
-						"=============================================",
+						blockBar(45),
 						" ", " ");
 			} else {
 				final Dependency dependency = new Dependency(name.toLowerCase(), version, groupId, artifactId, customRepo, alwaysUpdate);
 				if (dependencies.containsValue(dependency)) debug("Dependency " + name + " has a duplicate");
 
-				dependencies.put(name, dependency);
+				load(dependency);
 				debug("Loaded Dependency " + name + " From Config");
 			}
 		});
 
-		dependencies.values().forEach(this::load);
 	}
 
 
@@ -133,12 +138,11 @@ public final class DLoader extends JavaPlugin {
 
 	/**
 	 * Load a {@link Dependency} onto the Classpath
-	 *
+	 * <p>
 	 * <p>Either called by DLoader to load from Config</p>
 	 * <p>Or by a Plugin</p>
 	 *
 	 * @param dependency The Dependency to be loaded
-	 *
 	 * @see DLoader#load(Dependency, Runnable)
 	 */
 	public void load(Dependency dependency) {
@@ -148,18 +152,18 @@ public final class DLoader extends JavaPlugin {
 
 	/**
 	 * Load a {@link Dependency} onto the Classpath, and then execute a block of code
-	 *
+	 * <p>
 	 * <p>Runnable runs after the dependency and all child dependencies are loaded</p>
 	 *
 	 * @param dependency The Dependency to be loaded
-	 * @param whenDone Block of code ran after everything is loaded
-	 *
+	 * @param whenDone   Block of code ran after everything is loaded
 	 * @see DLoader#load(Dependency)
 	 */
 	public void load(Dependency dependency, Runnable whenDone) {
+		debug(" ", " ", blockBar(60), " ", blockArrow(dependency, "v"));
 		Urls.download(dependency, new File(dependencyFolder, dependency.getGroupId()), (jar, pom) -> {
-			loadJar(jar);
-			loadChildren(pom, whenDone);
+			loadJar(dependency, jar);
+			loadChildren(dependency, pom, whenDone);
 		});
 	}
 
@@ -174,28 +178,47 @@ public final class DLoader extends JavaPlugin {
 	}
 
 
-	private void loadChildren(File pomFile, Runnable whenDone) {
+	private void loadChildren(Dependency dependency, File pomFile, Runnable whenDone) {
+		debug("Loading child dependencies of " + dependency.getName());
 		List<Dependency> children = Xmls.readDependencies(pomFile);
 		if (children.isEmpty()) {
+			debug("No children found in " + dependency.getName(), blockArrow(dependency, "^"), blockBar(60), " ", " ");
 			whenDone.run();
 			return;
 		}
 
 		final int[] loaded = {0};
 
-		children.forEach(child -> load(child, () -> {
-			if (++loaded[0] == children.size()) whenDone.run();
-		}));
+		children.forEach(child -> {
+			child.setParent(dependency);
+
+			load(child, () -> {
+				if (++loaded[0] == children.size()) {
+					debug("Finished loading children from " + dependency.getName(), blockArrow(dependency, "^"), " ", blockBar(60), " ", " ");
+					whenDone.run();
+				}
+			});
+		});
 	}
 
-	private void loadJar(File jarFile) {
+	private void loadJar(Dependency dependency, File jarFile) {
 		try {
 			method.invoke(classLoader, jarFile.toURI().toURL());
 			debug("Added " + jarFile.getName() + " to ClassLoader");
+			dependencies.put(dependency.getName().toLowerCase(), dependency);
 		} catch (Exception e) {
 			log(Level.SEVERE, "Failed to load Jar File " + jarFile.getName());
 			e.printStackTrace();
 		}
+	}
+
+	private String blockArrow(Dependency dependency, String c) {
+		final String generated = Strings.repeat(c, dependency.getParentDepth());
+		return generated.isEmpty() ? c + c + c : generated;
+	}
+
+	private String blockBar(int length) {
+		return Strings.repeat("=", length);
 	}
 
 

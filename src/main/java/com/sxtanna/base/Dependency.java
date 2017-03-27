@@ -7,10 +7,13 @@ import com.google.common.base.Objects;
  * <p>
  * <p>Holds details of the Maven Dependency</p>
  */
+@SuppressWarnings("WeakerAccess")
 public final class Dependency {
 
 	private final String name, version, groupId, artifactId;
 	private final DOptions options;
+
+	private Dependency parent = null;
 
 	/**
 	 * Create a new Dependency
@@ -81,6 +84,58 @@ public final class Dependency {
 	public DOptions getOptions() {
 		return options;
 	}
+
+	/**
+	 * The Parent Dependency, meaning The parent depends on this
+	 *
+	 * @return The parent
+	 */
+	public Dependency getParent() {
+		return parent;
+	}
+
+	/**
+	 * Set the parent Dependency
+	 *
+	 * @param parent The new parent
+	 */
+	public void setParent(Dependency parent) {
+		this.parent = parent;
+	}
+
+	/**
+	 * Check if this Dependency has a parent
+	 *
+	 * @return true if it does, false otherwise
+	 */
+	public boolean hasParent() {
+		return getParent() != null;
+	}
+
+	/**
+	 * Get the depth of this dependency
+	 *
+	 * <p>Where "this" is this dependency, and "Parent" is it's parent</p>
+	 *
+	 * <p>this, will return 0</p>
+	 * <p>Parent > this, will return 1</p>
+	 * <p>Parent > Parent > this, will return 2</p>
+	 *
+	 * @return The depth of this Dependency's parents
+	 */
+	public int getParentDepth() {
+		int depth = 0;
+
+		Dependency parent = getParent();
+		while (parent != null) {
+			parent = parent.getParent();
+			depth++;
+		}
+
+		return depth;
+	}
+
+
 
 	/**
 	 * The name of this Dependency's Jar file in the Repo

@@ -41,8 +41,7 @@ public final class Xmls {
 	/**
 	 * Prevent Instantiation
 	 */
-	private Xmls() {
-	}
+	private Xmls() {}
 
 
 	/**
@@ -60,7 +59,7 @@ public final class Xmls {
 			NodeList pomDependencies = document.getElementsByTagName(TAG_DEPENDENCY);
 			if (pomDependencies == null) return Collections.emptyList();
 
-			DLoader.debug("Found " + pomDependencies.getLength() + " Dependencies");
+			DLoader.debug(" ", "Found " + pomDependencies.getLength() + " Dependencies" + " ");
 
 			for (int i = 0; i < pomDependencies.getLength(); i++) {
 				Element dependency = ((Element) pomDependencies.item(i));
@@ -70,7 +69,7 @@ public final class Xmls {
 				final String scope      = readTag(dependency, TAG_SCOPE);
 
 				if (!scope.equals("provided") && !scope.isEmpty()) {
-					DLoader.debug("Not going to load " + groupId + ":" + artifactId + ", its scope is included in the jar as '" + scope + "'");
+					DLoader.debug("Skipping " + groupId + ":" + artifactId + ", its scope is '" + scope + "'");
 					continue;
 				}
 
@@ -84,7 +83,7 @@ public final class Xmls {
 				final String optional = readTag(dependency, TAG_OPTIONAL);
 				if (!optional.isEmpty() && optional.equalsIgnoreCase("true")) continue;
 
-				DLoader.debug("Version " + version, "GroupId " + groupId, "ArtifactId " + artifactId);
+				DLoader.debug("Child >  GroupId " + groupId + ", ArtifactId " + artifactId + ", Version " + version + "  < Child");
 
 				dependencies.add(new Dependency(groupId + ':' + artifactId + ':' + version, version, groupId, artifactId));
 			}
@@ -118,6 +117,7 @@ public final class Xmls {
 			final String buildNumber = readTag(snapshot, "buildNumber");
 
 			final String latestSnapshot = dependency.getVersion().replace("SNAPSHOT", timestamp + "-" + buildNumber);
+			DLoader.debug("Latest Snapshot version of " + dependency.getName() + " is " + latestSnapshot);
 
 			FileUtils.forceDelete(metaFile);
 
