@@ -106,7 +106,7 @@ public final class Urls {
 	 */
 	@NotNull
 	public static String fixUrl(@NotNull String original) {
-		return original.endsWith("/") ? original : original + '/';
+		return original.isEmpty() || original.endsWith("/") ? original : original + '/';
 	}
 
 
